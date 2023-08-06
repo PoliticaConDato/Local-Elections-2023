@@ -19,8 +19,14 @@ library(ggrepel)
 
 #############       POLL MODEL       ################
 
+## Select election
+elections <- c("Cali","Bogota")
+
+election <- elections[2]
+
+
 ## Load polls
-polls <- read.csv("https://raw.githubusercontent.com/PoliticaConDato/Local-Elections-2023/main/Polls/Polls_Cali.csv")
+polls <- read.csv(paste0("https://raw.githubusercontent.com/PoliticaConDato/Local-Elections-2023/main/Polls/Polls_",election,".csv"))
 
 ## Clean data
 polls <- polls[,!names(polls) %in% c("Start.Date","End.Date","Methodology")]
@@ -75,9 +81,12 @@ weighted.values <- function(x) {
 model.df <- cbind(model.df,t(apply(model.df, 1, weighted.values)))
 
 ## Plot model and polls 
-group.colors <- c(Undecided = "#808285", Ortiz = "#282883", Rojas = "#e20e28", Eder = "#f3701b", Torres = "#AAFAC8", Otros = "#2fbef2")
-# AAFAC8 mint
-# #BFAB25 gold
+
+colors.Bogota <- c(Undecided = "#808285", Oviedo = "#F029A7", Bolivar = "#800080", Galan = "#C41C0C", Molano = "#1E4B8F", Lara = "#D1F34C", Otros = "#2fbef2")
+
+colors.Cali <- c(Undecided = "#808285", Ortiz = "#282883", Rojas = "#e20e28", Eder = "#f3701b", Torres = "#BFAB25", Otros = "#2fbef2")
+
+group.colors <- get(paste0("colors.",election))
 
 min.graph.date <- mdy("01/01/2023")
 
@@ -91,12 +100,11 @@ data.plot <- ggplot(filtered.polls, aes(x=Date, y=value, color=Candidate)) +
   scale_fill_manual(values=group.colors) +
   scale_color_manual(values=group.colors) + scale_y_continuous(labels = scales::percent) + 
   theme(legend.position="top", legend.title = element_blank(), legend.box = "horizontal", plot.title = element_text(hjust = 0.5)) + 
-  ggtitle("Polls for 2023 Cali Local Election") +
+  ggtitle(paste0("Polls for 2023 ",election," Local Election")) +
   xlab("Date") + 
   ylab("Vote %") +
   guides(color = guide_legend(nrow = 1, byrow = TRUE)) + 
-  geom_line(data = filtered.model, aes(x=Date, y=weighted.value, color=Candidate), linetype = "dashed") +
-  coord_cartesian(ylim = c(0, .7)) 
+  geom_line(data = filtered.model, aes(x=Date, y=weighted.value, color=Candidate), linetype = "dashed") 
 
 
 my_plot_1 <- ggdraw() +
@@ -106,7 +114,7 @@ my_plot_1 <- ggdraw() +
 
 my_plot_1
 
-png("Cali_Full_Polls.png", width = 1200, height = 900, res = 120)
+png(paste0(election,"_Full_Polls.png"), width = 1200, height = 900, res = 120)
 my_plot_1
 dev.off()
 
@@ -117,12 +125,12 @@ data.plot <- ggplot(filtered.polls[filtered.polls$Candidate != "Undecided",], ae
   scale_fill_manual(values=group.colors) +
   scale_color_manual(values=group.colors) + scale_y_continuous(labels = scales::percent) + 
   theme(legend.position="top", legend.title = element_blank(), legend.box = "horizontal", plot.title = element_text(hjust = 0.5)) + 
-  ggtitle("Polls for 2023 Cali Local Election") +
+  ggtitle(paste0("Polls for 2023 ",election," Local Election")) +
   xlab("Date") + 
   ylab("Vote %") +
   guides(color = guide_legend(nrow = 1, byrow = TRUE)) + 
-  geom_line(data = filtered.model[filtered.model$Candidate != "Undecided",], aes(x=Date, y=weighted.value.norm, color=Candidate), linetype = "dashed")  +
-  coord_cartesian(ylim = c(0, .7)) 
+  geom_line(data = filtered.model[filtered.model$Candidate != "Undecided",], aes(x=Date, y=weighted.value.norm, color=Candidate), linetype = "dashed")  
+  #+coord_cartesian(ylim = c(0, .7)) 
 
 
 my_plot_2 <- ggdraw() +
@@ -132,7 +140,7 @@ my_plot_2 <- ggdraw() +
 
 my_plot_2
 
-png("Cali_Polls_Excl_Undecided.png", width = 1200, height = 900, res = 120)
+png(paste0(election,"_Polls_Excl_Undecided.png"), width = 1200, height = 900, res = 120)
 my_plot_2
 dev.off()
 
@@ -147,19 +155,30 @@ remove(data.plot, filtered.model, filtered.polls, my_plot_1, my_plot_2, start.da
 #############       TRENDS  MODEL       ################
 
 keywords <- c("Alcalde","2023","Propuestas")
-candidates <- c("Ortiz","Eder","Rojas","Torres")
-calibration.weight <- as.data.frame(cbind(candidates,c(1,1,1,1)))
+candidates.Cali <- c("Ortiz","Eder","Rojas","Torres")
+candidates.Bogota <- c("Oviedo","Bolivar","Galan","Molano","Lara")
+candidates <- get(paste0("candidates.",election))
+
+calibration.weight <- as.data.frame(cbind(candidates,rep(1, times = length(candidates))))
 colnames(calibration.weight) <- c("Candidate","Calibration")
 calibration.weight$Calibration <- as.numeric(calibration.weight$Calibration)
 
+geography <- switch(
+  election,
+  "Cali" = "CO-VAC",
+  "Bogota" = "CO-DC",
+  "CO"
+)
+
 trend.search <- function(x) {
-  trends <- gtrendsR::gtrends(c(paste0(candidates[1]," ",x), paste0(candidates[2]," ",x), paste0(candidates[3]," ",x), paste0(candidates[4]," ",x)), geo = "CO-VAC", time = "today 3-m", onlyInterest = TRUE)
+  searchvector <- unlist(lapply(candidates, function(candidate) paste0(candidate, " ", x)))
+  trends <- gtrendsR::gtrends(searchvector, geo = geography, time = "today 3-m", onlyInterest = TRUE)
   trends <- trends$interest_over_time
   trends <- trends[,c(1,2,3)]
   trends$hits <- as.numeric(trends$hits)
   trends$hits[is.na(trends$hits)] <- 0
   trends[is.na(trends)] <- 0
-  write.csv(trends, paste0("Polls/trends_intent_",x,".csv"))
+  write.csv(trends, paste0("Polls/",election,"_trends_intent_",x,".csv"))
   
   trends$Candidate <- gsub( " .*$", "", trends$keyword )
   
@@ -193,17 +212,21 @@ trend.search <- function(x) {
   return(trends)
 }
 
-trend.names <- c("Roberto Ortiz","Alejandro Eder","Diana Rojas","Miyerlandi Torres")
+trend.names.Cali <- c("Roberto Ortiz","Alejandro Eder","Diana Rojas","Miyerlandi Torres")
+trend.names.Bogota <- c("Juan Oviedo","Gustavo Bolivar","Carlos Galan","Diego Molano","Rodrigo Lara")
 
+trend.names <- get(paste0("trend.names.",election))
 
 trend.search.name <- function(x) {
-  trends <- gtrendsR::gtrends(c(paste0(x[1]), paste0(x[2]), paste0(x[3]), paste0(x[4])), geo = "CO-VAC", time = "today 3-m", onlyInterest = TRUE)
+  searchvector <- unlist(lapply(x, paste0))
+  
+  trends <- gtrendsR::gtrends(searchvector, geo = geography, time = "today 3-m", onlyInterest = TRUE)
   trends <- trends$interest_over_time
   trends <- trends[,c(1,2,3)]
   trends$hits <- as.numeric(trends$hits)
   trends$hits[is.na(trends$hits)] <- 0
   trends[is.na(trends)] <- 0
-  write.csv(trends, paste0("Polls/trends_intent_names",".csv"))
+  write.csv(trends, paste0("Polls/",election,"_trends_intent_names",".csv"))
   
   trends$Candidate <- gsub( "^[^ ]* ", "", trends$keyword )
   
@@ -266,7 +289,7 @@ data.plot <- ggplot(trends.filtered, aes(x=date, y=value, color=Candidate)) +
   scale_fill_manual(values=group.colors) +
   scale_color_manual(values=group.colors) + scale_y_continuous(labels = scales::percent) + 
   theme(legend.position="top", legend.title = element_blank(), legend.box = "horizontal", plot.title = element_text(hjust = 0.5)) + 
-  ggtitle("Google Trends for 2023 Cali Local Election") +
+  ggtitle(paste0("Google Trends for 2023 ",election," Local Election")) +
   xlab("Date") + 
   ylab("Search Interest %") +
   guides(color = guide_legend(nrow = 1, byrow = TRUE)) 
@@ -279,7 +302,7 @@ my_plot_3 <- ggdraw() +
 
 my_plot_3
 
-png("Cali_Google_Trends.png", width = 1200, height = 900, res = 120)
+png(paste0(election,"_Google_Trends.png"), width = 1200, height = 900, res = 120)
 my_plot_3
 dev.off()
 
@@ -321,7 +344,7 @@ reduced.polls <- reduced.polls[,c("ID","weight")]
 new.polls <- merge(polls, reduced.polls, by = "ID")
 new.polls <- new.polls[,c("Sample","value.norm","weight","Candidate")]
 
-candidates <- cand.vec[1:5]
+candidates <- cand.vec[1:length(cand.vec)-1]
 
 
 for(i in 1:length(candidates)) {
@@ -352,25 +375,33 @@ ensemble.model <- arrange(ensemble.model, desc(Ensemble))
 
 kable(ensemble.model, "html",
       digits=1,
-      caption = "Cali 2023 Elections Model (% votes)") %>%
+      caption = paste0(election," 2023 Elections Model (% votes)")) %>%
   kable_styling(full_width = F) %>%
   footnote(number = c("Modeler: PoliData","Twitter: @PoliticaConDato",paste0("Date: ", format(Sys.Date(), "%Y-%m-%d"))))
 
 
 
 
-##### FUTURE WORK BELOW #########
+Í##### FUTURE WORK BELOW #########
 
 ##### PROBABILISTIC MODEL #####
 
 ## Build dataframe
-df <- as.data.frame(cbind(vec.Ortiz, vec.Rojas, vec.Eder, vec.Torres, vec.Otros))
+cand.vecs <- mget(paste0("vec.",candidates))
+df <- as.data.frame(do.call(cbind, cand.vecs))
+#df <- as.data.frame(cbind(vec.Ortiz, vec.Rojas, vec.Eder, vec.Torres, vec.Otros))
 df <- df[ , order(names(df))]
 candidates.sorted <- sort(candidates)
 colnames(df) <- candidates.sorted
 df <- reshape2::melt(df, variable.name = "Candidate")
 
-group.colors <- c(Eder = "#f3701b", Ortiz = "#282883", Otros = "#2fbef2", Rojas = "#e20e28" , Torres = "#AAFAC8")
+
+colors.Bogota <- c(Bolivar = "#800080",Galan = "#C41C0C",  Lara = "#D1F34C", Molano = "#1E4B8F", Otros = "#2fbef2",  Oviedo = "#F029A7")
+
+colors.Cali <- c(Eder = "#f3701b", Ortiz = "#282883", Otros = "#2fbef2", Rojas = "#e20e28" , Torres = "#BFAB25")
+
+group.colors <- get(paste0("colors.",election))
+
 
 ## Plot histograms
 ggplot(df, aes(x=value, fill=Candidate)) +
@@ -380,7 +411,7 @@ ggplot(df, aes(x=value, fill=Candidate)) +
 output.mar <- 2*(output.vec) -1 
 
 # Histogram
-poll.short <- poll.model[1:5,]
+poll.short <- poll.model[1:length(candidates),]
 poll.short <- poll.short[order(poll.short$Candidate),]
 
 data.hist <- df %>%
@@ -405,6 +436,6 @@ my_plot_4 <- ggdraw() +
 
 my_plot_4
 
-png("Probability.png", width = 1200, height = 900, res = 120)
+png(paste0(election,"_Probability.png"), width = 1200, height = 900, res = 120)
 my_plot_4
 dev.off()
