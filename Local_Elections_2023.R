@@ -82,7 +82,7 @@ model.df <- cbind(model.df,t(apply(model.df, 1, weighted.values)))
 
 ## Plot model and polls 
 
-colors.Bogota <- c(Undecided = "#808285", Oviedo = "#F029A7", Bolivar = "#800080", Galan = "#C41C0C", Molano = "#1E4B8F", Lara = "#D1F34C", Otros = "#2fbef2")
+colors.Bogota <- c(Undecided = "#808285", Oviedo = "#F029A7", Bolivar = "#800080", Galan = "#C41C0C", Molano = "#1E4B8F", Lara = "#BFAB25", Otros = "#2fbef2")
 
 colors.Cali <- c(Undecided = "#808285", Ortiz = "#282883", Rojas = "#e20e28", Eder = "#f3701b", Torres = "#BFAB25", Otros = "#2fbef2")
 
@@ -396,7 +396,7 @@ colnames(df) <- candidates.sorted
 df <- reshape2::melt(df, variable.name = "Candidate")
 
 
-colors.Bogota <- c(Bolivar = "#800080",Galan = "#C41C0C",  Lara = "#D1F34C", Molano = "#1E4B8F", Otros = "#2fbef2",  Oviedo = "#F029A7")
+colors.Bogota <- c(Bolivar = "#800080",Galan = "#C41C0C",  Lara = "#BFAB25", Molano = "#1E4B8F", Otros = "#2fbef2",  Oviedo = "#F029A7")
 
 colors.Cali <- c(Eder = "#f3701b", Ortiz = "#282883", Otros = "#2fbef2", Rojas = "#e20e28" , Torres = "#BFAB25")
 
