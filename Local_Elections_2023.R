@@ -22,7 +22,7 @@ library(ggrepel)
 ## Select election
 elections <- c("Cali","Bogota")
 
-election <- elections[2]
+election <- elections[1]
 
 
 ## Load polls
@@ -381,8 +381,7 @@ kable(ensemble.model, "html",
 
 
 
-
-ÍÍ##### FUTURE WORK BELOW #########
+##### FUTURE WORK BELOW #########
 
 ##### PROBABILISTIC MODEL #####
 
