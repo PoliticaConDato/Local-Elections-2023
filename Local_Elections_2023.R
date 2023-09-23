@@ -22,7 +22,7 @@ library(ggrepel)
 ## Select election
 elections <- c("Cali","Bogota")
 
-election <- elections[1]
+election <- elections[2]
 
 
 ## Load polls
