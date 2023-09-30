@@ -22,7 +22,7 @@ library(ggrepel)
 ## Select election
 elections <- c("Cali","Bogota")
 
-election <- elections[2]
+election <- elections[1]
 
 
 ## Load polls
@@ -84,7 +84,7 @@ model.df <- cbind(model.df,t(apply(model.df, 1, weighted.values)))
 
 colors.Bogota <- c(Undecided = "#808285", Oviedo = "#F029A7", Bolivar = "#800080", Galan = "#C41C0C", Molano = "#1E4B8F", Lara = "#BFAB25", Otros = "#2fbef2")
 
-colors.Cali <- c(Undecided = "#808285", Ortiz = "#282883", Rojas = "#e20e28", Eder = "#f3701b", Torres = "#BFAB25", Otros = "#2fbef2")
+colors.Cali <- c(Undecided = "#808285", Ortiz = "#282883", Renteria = "#e20e28", Eder = "#f3701b", Torres = "#BFAB25", Otros = "#2fbef2")
 
 group.colors <- get(paste0("colors.",election))
 
@@ -155,7 +155,7 @@ remove(data.plot, filtered.model, filtered.polls, my_plot_1, my_plot_2, start.da
 #############       TRENDS  MODEL       ################
 
 keywords <- c("Alcalde","2023","Propuestas")
-candidates.Cali <- c("Ortiz","Eder","Rojas","Torres")
+candidates.Cali <- c("Ortiz","Eder","Renteria","Torres")
 candidates.Bogota <- c("Oviedo","Bolivar","Galan","Molano","Lara")
 candidates <- get(paste0("candidates.",election))
 
@@ -212,7 +212,7 @@ trend.search <- function(x) {
   return(trends)
 }
 
-trend.names.Cali <- c("Roberto Ortiz","Alejandro Eder","Diana Rojas","Miyerlandi Torres")
+trend.names.Cali <- c("Roberto Ortiz","Alejandro Eder","Danis Renteria","Miyerlandi Torres")
 trend.names.Bogota <- c("Juan Oviedo","Gustavo Bolivar","Carlos Galan","Diego Molano","Rodrigo Lara")
 
 trend.names <- get(paste0("trend.names.",election))
@@ -397,7 +397,7 @@ df <- reshape2::melt(df, variable.name = "Candidate")
 
 colors.Bogota <- c(Bolivar = "#800080",Galan = "#C41C0C",  Lara = "#BFAB25", Molano = "#1E4B8F", Otros = "#2fbef2",  Oviedo = "#F029A7")
 
-colors.Cali <- c(Eder = "#f3701b", Ortiz = "#282883", Otros = "#2fbef2", Rojas = "#e20e28" , Torres = "#BFAB25")
+colors.Cali <- c(Eder = "#f3701b", Ortiz = "#282883", Otros = "#2fbef2", Renteria = "#e20e28" , Torres = "#BFAB25")
 
 group.colors <- get(paste0("colors.",election))
 
